@@ -188,7 +188,6 @@ macro_rules! impl_select {
             {
                      #[$crate::py_sql("`select ${table_column} from ${table_name} `",$sql)]
                      async fn $fn_name$(<$($gkey: $gtype,)*>)?(executor: &dyn $crate::executor::Executor,table_column:&str,table_name:&str,$($param_key:$param_type,)*) -> std::result::Result<$container<$table>,$crate::rbdc::Error> {impled!()}
-                     let mut table_column = "*".to_string();
                      let mut table_name = String::new();
                      $(table_name = $table_name.to_string();)?
                      #[$crate::snake_name($table)]
@@ -196,6 +195,7 @@ macro_rules! impl_select {
                      if table_name.is_empty(){
                          table_name = snake_name();
                      }
+                     let mut table_column = format!("{}.*",table_name);
                      $fn_name(executor,&table_column,&table_name,$($param_key ,)*).await
             }
         }
@@ -435,7 +435,6 @@ macro_rules! impl_select_page {
                 page_request: &dyn $crate::plugin::IPageRequest,
                 $($param_key:$param_type,)*
             ) -> std::result::Result<$crate::plugin::Page::<$table>, $crate::rbdc::Error> {
-                let mut table_column = "*".to_string();
                 let mut table_name = String::new();
                 $(table_name = $table_name.to_string();)?
                 #[$crate::snake_name($table)]
@@ -443,6 +442,7 @@ macro_rules! impl_select_page {
                 if table_name.is_empty(){
                     table_name = snake_name();
                 }
+                let mut table_column = format!("{}.*",table_name);
                 //pg,mssql can override this parameter to implement its own limit statement
                 let mut limit_sql = " limit ${page_no},${page_size}".to_string();
                 limit_sql=limit_sql.replace("${page_no}", &page_request.offset().to_string());
